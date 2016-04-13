@@ -44,8 +44,8 @@ classdef SapEditWindow < LineEditWindow
             uimenu(mf, 'Label', 'New Project', 'Accelerator', 'N', 'Callback', @o.newProject);
             uimenu(mf, 'Label', 'Save Project', 'Accelerator', 'S', 'Callback', @o.saveProject);
             uimenu(mf, 'Label', 'Save As', 'Callback', @o.saveAs);
-            uimenu(mf, 'Label', 'Export k Data', 'Callback', @o.export);
-            uimenu(mf, 'Label', 'Export k Error', 'Callback', @o.export_kerror);
+            uimenu(mf, 'Label', 'Export K Data', 'Callback', @o.export);
+            uimenu(mf, 'Label', 'Export K Error', 'Callback', @o.export_kerror);
             uimenu(mf, 'Label', 'Exit', 'Accelerator', 'X', 'Callback', @o.checkExit);
 
             uimenu(mh, 'Label', 'About', 'Callback', @o.helpAbout);
@@ -76,7 +76,8 @@ classdef SapEditWindow < LineEditWindow
 
             o.addCommand('undo', me,    'undo last',     'control-z',          'undo last command',                    1, 6, @(~,~)o.sfp.undo());
 
-            o.addCommandDesc('pantext4', 0, 'Flag questionable k data',      1, 4);
+%           Not currently used. For future revisions. 
+%            o.addCommandDesc('pantext4', 0, 'Flag questionable K data',      1, 4);
 
             o.addCommand('prevSensor', 0, 'prev sensor',         'uparrow', 'prev sensor',      2, 1, @(~,~)o.selectSensor(-1));
             o.addCommand('nextSensor',  0, 'next sensor',         'downarrow',  'next sensor',       3, 1, @(~,~)o.selectSensor(1));
@@ -92,10 +93,10 @@ classdef SapEditWindow < LineEditWindow
                  'Black dot: Stable dT & low VPD'],...
                     1, 11);
             o.addChartDesc('kcharttxt', 0,...
-                ['Blue line: Initial k        ';
+                ['Blue line: Initial K        ';
                  '     max nightly dT         ';
                  '                            ';
-                 'Red line: Current k         ';
+                 'Red line: Current K         ';
                  '     based on red line above';
                  '                            ';
                  'Green line: VPD (normalized)'],...
@@ -123,10 +124,10 @@ classdef SapEditWindow < LineEditWindow
 
             o.charts.dtZoom.ButtonDownFcn = @o.selectDtArea;
 
-            ylabel(o.charts.dtZoom, 'dt');
-            ylabel(o.charts.dtFull, 'dt');
-            ylabel(o.charts.kZoom, 'k');
-            ylabel(o.charts.kFull, 'k');
+            ylabel(o.charts.dtZoom, 'dT');
+            ylabel(o.charts.dtFull, 'dT');
+            ylabel(o.charts.kZoom, 'K');
+            ylabel(o.charts.kFull, 'K');
 
             for name = {'bla', 'sapflow', 'spbl', 'zvbl', 'lzvbl'}
                 line = o.lines.(name{:});
