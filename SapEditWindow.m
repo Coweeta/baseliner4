@@ -9,6 +9,10 @@ classdef SapEditWindow < LineEditWindow
     % Revisions 3/23/2016 [ACO]:
     %   adds more labels; cosmetic only
 
+    properties (Constant)
+       applicationName = 'Baseliner 4 beta';
+    end
+
     properties
         lines % Structure containing handles to each of the lines representing the data
 
@@ -50,7 +54,7 @@ classdef SapEditWindow < LineEditWindow
 
             uimenu(mh, 'Label', 'About', 'Callback', @o.helpAbout);
 
-            o.setWindowTitle('Sapflow Tool')
+            o.setWindowTitle('')
             o.figureHnd.CloseRequestFcn = @o.checkExit;
 
             % Add in controls
@@ -76,7 +80,7 @@ classdef SapEditWindow < LineEditWindow
 
             o.addCommand('undo', me,    'undo last',     'control-z',          'undo last command',                    1, 6, @(~,~)o.sfp.undo());
 
-%           Not currently used. For future revisions. 
+%           Not currently used. For future revisions.
 %            o.addCommandDesc('pantext4', 0, 'Flag questionable K data',      1, 4);
 
             o.addCommand('prevSensor', 0, 'prev sensor',         'uparrow', 'prev sensor',      2, 1, @(~,~)o.selectSensor(-1));
@@ -138,18 +142,32 @@ classdef SapEditWindow < LineEditWindow
             o.zoomer.createZoomAreaIndicators();
 
             o.projectConfig.numSensors = 0;
-            
+
             o.show();
          end
-         
+
+    end
+
+    methods (Access = protected)
+
+        function setWindowTitle(o, format, varargin)
+            % Sets the text at the top of the window.  Accepts printf()
+            % arguments.  This text follows the name of the program, as
+            % defined in the class constant, applicationName.
+            fullFormat = strcat(SapEditWindow.applicationName, format);
+
+            o.setWindowTitle@LineEditWindow(fullFormat, varargin{:})
+        end
+
     end
 
     methods (Access = private)
 
+
         function helpAbout(~, ~, ~)
 
             text = {
-                'Baseliner 4.beta'
+                SapEditWindow.applicationName
                 ''
                 'Created by the USDA Forest Service'
                 'Southern Research Station, Coweeta Hydrologic Laboratory'
@@ -218,7 +236,7 @@ classdef SapEditWindow < LineEditWindow
                 return
             end
             o.projectFilename = fullfile(path, filename);
-            o.setWindowTitle('Sapflow Tool: %s', o.projectFilename)
+            o.setWindowTitle(': %s', o.projectFilename)
             o.saveProject(0, 0)
         end
 
@@ -262,7 +280,7 @@ classdef SapEditWindow < LineEditWindow
             end
 
             o.projectFilename = fullfile(path, filename);
-            o.setWindowTitle('Sapflow Tool: %s', o.projectFilename)
+            o.setWindowTitle(': %s', o.projectFilename)
 
             o.saveProject(0, 0)
         end
@@ -293,7 +311,7 @@ classdef SapEditWindow < LineEditWindow
             o.startWait('Reading Config')
 
             o.projectFilename = fullfile(path, filename);
-            o.setWindowTitle('Sapflow Tool: %s', o.projectFilename)
+            o.setWindowTitle(': %s', o.projectFilename)
             try
                 allConfig = loadSapflowConfig(o.projectFilename);
             catch err
