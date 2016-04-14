@@ -265,7 +265,7 @@ classdef LineEditWindow < handle
             o.figureHnd.Pointer = 'arrow';
             delete(o.waitBarWindow);
         end
-        
+
         function show(o)
             o.figureHnd.Visible = 'On';
         end
@@ -275,13 +275,13 @@ classdef LineEditWindow < handle
 
         function resizeItem(o, item)
             % Called by the figure's resize callback, changes the item's
-            % position in the window.  The desired position is encoded in 
-            % the widget's UserData field in units of 1/25 figure height 
-            % and 1/25 figure width 
+            % position in the window.  The desired position is encoded in
+            % the widget's UserData field in units of 1/25 figure height
+            % and 1/25 figure width
             item.Position = item.UserData .* o.figPosScaler;
         end
-        
-        
+
+
         function resizeItems(o, itemArray)
             % Many figure widgets are grouped together in cell arrays.
             % This method iterates through such an array resizing each
@@ -291,8 +291,8 @@ classdef LineEditWindow < handle
                 o.resizeItem(itemArray.(names{i}))
             end
         end
-        
-        
+
+
         function sizeChanged(o, ~, ~)
             % Callback for when application window is resized or first
             % displayed.  Goes through each element and redraws it.
@@ -301,13 +301,13 @@ classdef LineEditWindow < handle
             xs = pos(3)/25; % width
             ys = pos(4)/25; % height
             o.figPosScaler = [xs, ys, xs, ys];
-            
+
             o.resizeItems(o.charts)
             o.resizeItems(o.buttons)
             o.resizeItem(o.statusBar)
 
-        end    
-            
+        end
+
         function setCommandState(o, names, state)
             % Used to enable or disable commands.  If cell array of names,
             % 'names' is empty then all commands are enabled/disabled.
