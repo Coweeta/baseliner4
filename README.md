@@ -1,10 +1,10 @@
-# sapflowtool
+# Baseliner 4
 
-MATLAB code for processing tree sapflow measurements
+MATLAB application for processing tree sapflow measurements.
 
 Chris Oishi, Dave Hawthorne 
 
-USDA Forest Service, Southern Research Station, Coweeta 
+USDA Forest Service, Southern Research Station, Coweeta Hydrologic Laboratory
 
 Requirements:
 * MATLAB 2014 or higher
