@@ -9,10 +9,6 @@ classdef SapEditWindow < LineEditWindow
     % Revisions 3/23/2016 [ACO]:
     %   adds more labels; cosmetic only
 
-    properties (Constant)
-       applicationName = 'Baseliner 4 beta';
-    end
-
     properties
         lines % Structure containing handles to each of the lines representing the data
 
@@ -54,11 +50,11 @@ classdef SapEditWindow < LineEditWindow
 
             uimenu(mh, 'Label', 'About', 'Callback', @o.helpAbout);
 
-            o.setWindowTitle('')
+            o.setWindowTitle('Baseliner 4')
             o.figureHnd.CloseRequestFcn = @o.checkExit;
 
             % Add in controls
-            o.addCommandDesc('pantext0', 0, 'Active Screen',      1, 16);
+            o.addCommandDesc('pantext0', 0, 'dT editor window display',      1, 16);
             o.addCommand('panLeft',  0, '< pan',         'leftarrow',  'pan focus area left',       2, 15, @(~,~)o.zoomer.pan(-0.8));
             o.addCommand('panRight', 0, 'pan >',         'rightarrow', 'pan focus area right',      3, 15, @(~,~)o.zoomer.pan(+0.8));
             o.addCommand('zoomIn',   0, 'zoom in',       'add',        'narrow focus area duration', 2, 14, @(~,~)o.zoomer.zoom(0.8));
@@ -66,21 +62,21 @@ classdef SapEditWindow < LineEditWindow
             o.addCommand('zoomReg',  0, 'zoom sel',      'z',          'zoom to selection',                2, 13, @o.zoomtoRegion);
 
             o.addCommandDesc('pantext1', 0, 'Edit dT',      1, 12);
-            o.addCommand('deleteSapflow', me,  'delete SF data','d',          'delete selected sapflow data',         2, 11, @o.deleteSapflow);
-            o.addCommand('interpolateSapflow', me,  'interpolate SF','i',          'interpolate selected sapflow data',    3, 11, @o.interpolateSapflow);
-            o.addCommand('addBreakpoint', me,  'add dT breakpoint','shift-b',          'add dT breakpoint',         3, 10, @o.addBreak);
+            o.addCommand('deleteSapflow', me,  'delete dT data','d',          'delete selected sapflow data',         2, 11, @o.deleteSapflow);
+            o.addCommand('interpolateSapflow', me,  'interpolate dT','i',          'interpolate selected sapflow data',    3, 11, @o.interpolateSapflow);
+%            o.addCommand('addBreakpoint', me,  'add dT breakpoint','shift-b',          'add dT breakpoint',         3, 10, @o.addBreak);
 
             o.addCommandDesc('pantext2', 0, 'Edit dTmax Baseline',      1, 9);
-            o.addCommand('delBla',   me, 'del BL anchors','delete',          'delete baseline anchors in range', 2, 8, @o.delBla);
-            o.addCommand('anchorBla', me, 'anchor BL',     'a',          'anchor baseline to suggested points',  3, 8, @o.anchorBla);
+            o.addCommand('delBla',   me, 'delete anchor points','delete',          'delete baseline anchors in range', 2, 8, @o.delBla);
+            o.addCommand('anchorBla', me, 'set anchor points',     'a',          'anchor baseline to suggested points',  3, 8, @o.anchorBla);
 
             o.addCommandDesc('pantext3', 0, 'Automatic dTmax Baseline',      1, 7);
             o.addCommand('autoNightly', me,     'Nightly BL',     'shift-n',          'apply nightly baseline anchors',       2, 6, @o.autoNightlyBaseline);
-            o.addCommand('auto', me,     'auto BL',     'shift-a',          'apply automatic baseline anchors',       3, 6, @o.autoSetBaseline);
+            o.addCommand('auto', me,     'low-VPD BL',     'shift-a',          'apply automatic baseline anchors',       3, 6, @o.autoSetBaseline);
 
             o.addCommand('undo', me,    'undo last',     'control-z',          'undo last command',                    1, 6, @(~,~)o.sfp.undo());
 
-%           Not currently used. For future revisions.
+%           Not currently used. For future revisions. 
 %            o.addCommandDesc('pantext4', 0, 'Flag questionable K data',      1, 4);
 
             o.addCommand('prevSensor', 0, 'prev sensor',         'uparrow', 'prev sensor',      2, 1, @(~,~)o.selectSensor(-1));
@@ -128,10 +124,10 @@ classdef SapEditWindow < LineEditWindow
 
             o.charts.dtZoom.ButtonDownFcn = @o.selectDtArea;
 
-            ylabel(o.charts.dtZoom, 'dT');
-            ylabel(o.charts.dtFull, 'dT');
-            ylabel(o.charts.kZoom, 'K');
-            ylabel(o.charts.kFull, 'K');
+            ylabel(o.charts.dtZoom, 'dT editor');
+            ylabel(o.charts.dtFull, 'dT overview');
+            ylabel(o.charts.kZoom, 'K detail');
+            ylabel(o.charts.kFull, 'K overview');
 
             for name = {'bla', 'sapflow', 'spbl', 'zvbl', 'lzvbl'}
                 line = o.lines.(name{:});
@@ -142,35 +138,30 @@ classdef SapEditWindow < LineEditWindow
             o.zoomer.createZoomAreaIndicators();
 
             o.projectConfig.numSensors = 0;
-
+            
             o.show();
          end
-
-    end
-
-    methods (Access = protected)
-
-        function setWindowTitle(o, format, varargin)
-            % Sets the text at the top of the window.  Accepts printf()
-            % arguments.  This text follows the name of the program, as
-            % defined in the class constant, applicationName.
-            fullFormat = strcat(SapEditWindow.applicationName, format);
-
-            o.setWindowTitle@LineEditWindow(fullFormat, varargin{:})
-        end
-
+         
     end
 
     methods (Access = private)
 
-
         function helpAbout(~, ~, ~)
 
             text = {
-                SapEditWindow.applicationName
+                'Baseliner 4.beta'
                 ''
-                'Created by the USDA Forest Service'
-                'Southern Research Station, Coweeta Hydrologic Laboratory'
+                'Created by A. Christopher Oishi & David Hawthorne'
+                'USDA Forest Service, Southern Research Station'
+                'Coweeta Hydrologic Laboratory'
+                ' '
+                'The Baseliner software has been made publicly available for research and'
+                'publications. We encourage feedback and development by users to improve' 
+                'the functionality and effectiveness of this product. Please acknowledge'
+                'this software with the following citation: '
+                '[ F.S. GTR and doi info ]'
+                'and reference any relevant papers on the data processing methodology'
+                '(e.g., Oishi et al. 2008). '
                 ' '
                 'We acknowledge Ram Oren and the C-H2O Ecology Lab group at the Nicholas'
                 'School of the Environment at Duke University for development of Baseliner'
@@ -236,7 +227,7 @@ classdef SapEditWindow < LineEditWindow
                 return
             end
             o.projectFilename = fullfile(path, filename);
-            o.setWindowTitle(': %s', o.projectFilename)
+            o.setWindowTitle('Sapflow Tool: %s', o.projectFilename)
             o.saveProject(0, 0)
         end
 
@@ -280,7 +271,7 @@ classdef SapEditWindow < LineEditWindow
             end
 
             o.projectFilename = fullfile(path, filename);
-            o.setWindowTitle(': %s', o.projectFilename)
+            o.setWindowTitle('Sapflow Tool: %s', o.projectFilename)
 
             o.saveProject(0, 0)
         end
@@ -311,7 +302,7 @@ classdef SapEditWindow < LineEditWindow
             o.startWait('Reading Config')
 
             o.projectFilename = fullfile(path, filename);
-            o.setWindowTitle(': %s', o.projectFilename)
+            o.setWindowTitle('Sapflow Tool: %s', o.projectFilename)
             try
                 allConfig = loadSapflowConfig(o.projectFilename);
             catch err
@@ -551,13 +542,14 @@ classdef SapEditWindow < LineEditWindow
 
         end
 
-        function addBreak(o, ~, ~)
-            % .
+%   not currently used
+%         function addBreak(o, ~, ~)
+%             % .
 %             o.deselect()
 %             i = o.pointsInSelection(o.lines.zvbl);
 %             o.sfp.addBaselineAnchors(o.lines.zvbl.XData(i));
-
-        end
+% 
+%         end
 
         function selectDtArea(o, chart, ~)
             % The user has clicked inside the zoom chart.  Once a range has
