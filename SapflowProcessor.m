@@ -77,7 +77,7 @@ classdef SapflowProcessor < handle
             o.spbl = [1,o.ssL];
             o.zvbl = [1,o.ssL];
             o.lzvbl = [1,o.ssL];
-            o.bli = BL_nightly(o);
+            o.bli = BL_nightly(o.ss,o.doy,o.tod);
 
 %            o.bla = [1,o.ssL];
             o.bla = o.bli; % uses initial baseline as starting point for adjustments
@@ -318,7 +318,7 @@ classdef SapflowProcessor < handle
            %  the current data.
           function yesnight_Callback(source,eventdata)
 
-            o.bla = BL_nightly(o);
+            o.bla = BL_nightly(o.ss,o.doy,o.tod);
 
             o.compute();
             o.sapflowCallback();
@@ -338,22 +338,23 @@ classdef SapflowProcessor < handle
 
         end
 
-        function [bl_night]=BL_nightly(o)
-            % establishes initial baseline based on maximum dT value each
-            % night (defined by time before 7:00 AM)
-            bl_night=[];
-            for d=min(o.doy):max(o.doy)
-                DI=find(o.doy==d & o.tod<700 & o.ss'>0);
-                if length(DI)>0
-                    [mDI,iDI]=max(o.ss(DI));
-                    if length(iDI)>=1
-                        bl_night=[bl_night;DI(iDI(1))];
-                    end
-                end
-            end
-            bl_night=[1;bl_night;length(o.ssL)];
-            bl_night=unique(bl_night)';
-        end
+%  Moved into stand-alone function
+%         function [bl_night]=BL_nightly(o)
+%             % establishes initial baseline based on maximum dT value each
+%             % night (defined by time before 7:00 AM)
+%             bl_night=[];
+%             for d=min(o.doy):max(o.doy)
+%                 DI=find(o.doy==d & o.tod<700 & o.ss'>0);
+%                 if length(DI)>0
+%                     [mDI,iDI]=max(o.ss(DI));
+%                     if length(iDI)>=1
+%                         bl_night=[bl_night;DI(iDI(1))];
+%                     end
+%                 end
+%             end
+%             bl_night=[1;bl_night;length(o.ssL)];
+%             bl_night=unique(bl_night)';
+%         end
 
         function compute(o)
             % Based on the sapflow, bla and VPD data, calculate the K, KA

@@ -44,8 +44,9 @@ classdef SapEditWindow < LineEditWindow
             uimenu(mf, 'Label', 'New Project', 'Accelerator', 'N', 'Callback', @o.newProject);
             uimenu(mf, 'Label', 'Save Project', 'Accelerator', 'S', 'Callback', @o.saveProject);
             uimenu(mf, 'Label', 'Save As', 'Callback', @o.saveAs);
-            uimenu(mf, 'Label', 'Export K Data', 'Callback', @o.export);
-            uimenu(mf, 'Label', 'Export K Error', 'Callback', @o.export_kerror);
+            uimenu(mf, 'Label', 'Export current K estimates', 'Callback', @o.export);
+            uimenu(mf, 'Label', 'Export nightly dTmax K estimates', 'Callback', @o.export_nightly);
+            uimenu(mf, 'Label', 'Export K error estimates', 'Callback', @o.export_kerror);
             uimenu(mf, 'Label', 'Exit', 'Accelerator', 'X', 'Callback', @o.checkExit);
 
             uimenu(mh, 'Label', 'About', 'Callback', @o.helpAbout);
@@ -333,6 +334,47 @@ classdef SapEditWindow < LineEditWindow
             for i = 1:o.projectConfig.numSensors
                 thisSfp = o.allSfp{i};
                 kLines(:,i) = thisSfp.ka_line;
+            end
+            kOut=[ones(thisSfp.ssL,1) thisSfp.doy thisSfp.tod thisSfp.vpd thisSfp.par kLines];
+            try
+                csvwrite(fullfile(path, filename), kOut);
+            catch err
+                errordlg(err.message, 'Export failed')
+            end
+
+            o.endWait();
+        end
+
+        function export_nightly(o, ~, ~)
+            % The user wants to export data from the tool.
+            [filename, path] = uiputfile('*.csv', 'Select Export File');
+            if not(filename)
+                return
+            end
+            o.startWait('Exporting');
+            kLines = zeros(o.allSfp{1}.ssL, o.projectConfig.numSensors);
+            for i = 1:o.projectConfig.numSensors
+                thisSfp = o.allSfp{i};
+                thisSensor = o.allSfp{i}.ss';
+                thisDOY = o.allSfp{i}.doy';
+                thisTOD = o.allSfp{i}.tod';
+                thisdTmax = BL_nightly(thisSensor,thisDOY,thisTOD);
+
+                %  Modfied compute(o) function from SapflowProcessor.m
+                % Based on the sapflow, bla and VPD data, calculate the K, KA
+                % and NVPD values.
+                %
+                % If at least two bla points are positive ...
+                if sum(thisSensor(thisdTmax)>0)>=2
+                    thisblv = interp1(thisdTmax, thisSensor(thisdTmax), (1:length(thisSensor))');
+                    thiska_line = thisblv ./ thisSensor - 1;
+                    thiska_line(thiska_line < 0) = 0;
+                else
+                    thiska_line = nan * thisSensor;
+                end
+            
+            
+            kLines(:,i) = thiska_line;
             end
             kOut=[ones(thisSfp.ssL,1) thisSfp.doy thisSfp.tod thisSfp.vpd thisSfp.par kLines];
             try
