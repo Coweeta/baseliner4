@@ -1,4 +1,4 @@
-# Baseliner_4_01.exe; version released 2018.12.12
+# Baseliner_4_01; version released 2018.12.12
 Functionally identical to previous version, but now will correct for common time-step errors, including missing or duplicate time-steps and midnight time/day errors (if midnight is recorded as 00:00 it should be the first time step of a day, else if 24:00 it should be the last time-step of the day).
 
 
