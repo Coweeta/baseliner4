@@ -39,15 +39,94 @@ function [yearNum, par, vpd, sapflow, doy, tod] = loadRawSapflowData(filename)
     timeSteps = sampleTime(2:end) - sampleTime(1:end-1);       %TEMP!!! just use MATLAB's diff()
 
     interval = unique(timeSteps);
-    if length(interval) ~= 1
+    if length(interval)==1
+        vpd = raw(:,5);
+        par = raw(:,6);
+        sapflow = raw(:,7:numCols);
+
+    elseif length(interval) ~= 1
         % There's more than one amount that neighbouring times change by...
+        
+        % first, fix potential problems with midnight timestamp.
+        % 00:00 time should be the first value of a day, not the last 
+        % and/or 24:00 should be the last value of the day, not the first.
+        uDOY=unique(dayOfYear);
+        uDOY(uDOY<1|uDOY>366)=[];
+        for i=uDOY(1):uDOY(end)
+            ii=find(dayOfYear==i);
+            if length(ii)>1 && encodedTime(ii(end))==0
+                dayOfYear(ii(end))=dayOfYear(ii(end))-1;
+            elseif length(ii)>1 && encodedTime(ii(1))>2300 && encodedTime(ii(1))>encodedTime(ii(2))
+                dayOfYear(ii(1))=dayOfYear(ii(1))+1;
+            end
+        end
+                
+        % Next create continuous time matrix
+        uDOY=unique(dayOfYear);
+        uDOY(uDOY<1|uDOY>366)=[];
+        timestart=[];
+        timeend=[];
+        for i=uDOY(1):uDOY(end)
+            ii=find(dayOfYear==i);
+            if length(ii)>=12
+                timestart=[timestart;encodedTime(ii(1))];
+                timeend=[timeend;encodedTime(ii(end))];
+            end
+        end
+        timestart=round(mode(timestart));
+        timeend=round(mode(timeend));
+        hourstart=floor(timestart/100);
+        minutestart=timestart-hourstart*100;
+        hourend=floor(timeend/100);
+        minuteend=timeend-hourend*100;
+        cDOY=dayOfYear+hour/24+minute/(24*60); % continuous time in fractional day-of-year
+        deltaTime=round(mode(diff(cDOY))*60*24); % determines most frequent time step in minutes
+        hseg=60/deltaTime;
+        hmat=[hourstart minutestart];
+        for i=2:24*hseg
+            hmat(i,:)=[hmat(i-1,1) hmat(i-1,2)+deltaTime];
+            if hmat(i,2)==60
+                hmat(i,:)=[hmat(i,1)+1 0];
+            end
+        end
+        
+        fullTime=[];
+        for i=uDOY(1):uDOY(end)
+            fullTime=[fullTime; i*ones(length(hmat),1) hmat];
+        end
+        
+        vpd=nan(length(fullTime),1);
+        par=nan(length(fullTime),1);
+        sapflow=nan(length(fullTime),numCols-6);
+        for i=1:length(dayOfYear)
+            ii=find(fullTime(:,1)==dayOfYear(i) & fullTime(:,2)==hour(i) & fullTime(:,3)==minute(i));
+            if length(ii)==1
+                vpd(ii) = raw(i,5);
+                par(ii) = raw(i,6);
+                sapflow(ii,:) = raw(i,7:numCols);
+            end
+        end
+        
+        dayOfYear=fullTime(:,1);
+        hour=fullTime(:,2);
+        minute=fullTime(:,3);
+        encodedTime=hour*100+minute;
+        yearNum=yearNum(1)*ones(length(fullTime),1);
+%         intervalList = sprintf('%d ', minutes(interval));
+%         throw(MException('sapflowData:fileError','Inconsistent sample intervals (%s minutes)', intervalList))
+    end
+
+    % one final check to make sure the new time series is okay
+    sampleTime = datetime(yearNum, 1, dayOfYear, hour, minute, 0);
+    % Check that the time step is uniform.
+    timeSteps = sampleTime(2:end) - sampleTime(1:end-1);       %TEMP!!! just use MATLAB's diff()
+    interval = unique(timeSteps);
+    
+    if length(interval) ~= 1
         intervalList = sprintf('%d ', minutes(interval));
         throw(MException('sapflowData:fileError','Inconsistent sample intervals (%s minutes)', intervalList))
     end
-    vpd = raw(:,5);
-    par = raw(:,6);
-    sapflow = raw(:,7:numCols);
-
+    
     doy = dayOfYear;  %%TEMP!!!
     tod = encodedTime; %%TEMP!!!
 
