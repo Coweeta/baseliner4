@@ -1,3 +1,22 @@
+# Baseliner_4_02; version released 2020.07.07
+
+New updates to SapEditWindow.m script introduces two new "export" options: (1) for cleaned dT data and (2) for estimated dTmax baseline (version displayed at time of export--either edited or default). These options can be used for addtional analysis, including Clearwater-correction (Clearwater et al., 1999; Tree Physiology 19, 681--687) if sensors are partially in contact with heartwood. For Clearwater-correction: 
+
+dT_sw = [dT - (b * dT_max)]/a
+
+where,
+dT_sw is dT in sapwood (i.e., adjusted dT)
+dT is original (cleaned) dT
+dT_max is dT under zero-flow conditions (i.e., estimated "baseline")
+a is proportion of probe in sapwood (ranging from 0.0 to 1.0)
+b is proportion of probe in heartwood (b = 1 - a; ranging from 0.0 to 1.0)
+
+
+and thus, k-values are calculated manually (using user generated code or spreadsheets),
+
+k = (dTmax - dT_sw) / dT_sw
+
+
 # Baseliner_4_01; version released 2018.12.12
 Functionally identical to previous version, but now will correct for common time-step errors, including missing or duplicate time-steps and midnight time/day errors (if midnight is recorded as 00:00 it should be the first time step of a day, else if 24:00 it should be the last time-step of the day).
 
