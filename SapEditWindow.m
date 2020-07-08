@@ -58,6 +58,8 @@ classdef SapEditWindow < LineEditWindow
             uimenu(mf, 'Label', 'Export current K estimates', 'Callback', @o.export);
             uimenu(mf, 'Label', 'Export nightly dTmax K estimates', 'Callback', @o.export_nightly);
             uimenu(mf, 'Label', 'Export K error estimates', 'Callback', @o.export_kerror);
+            uimenu(mf, 'Label', 'Export cleaned dT data', 'Callback', @o.export_dTclean);
+            uimenu(mf, 'Label', 'Export dTmax baseline', 'Callback', @o.export_dTmax);
             uimenu(mf, 'Label', 'Exit', 'Accelerator', 'X', 'Callback', @o.checkExit);
 
             uimenu(mh, 'Label', 'About', 'Callback', @o.helpAbout);
@@ -428,7 +430,79 @@ classdef SapEditWindow < LineEditWindow
 
             o.endWait();
         end
+        
+ %%   start new edit 07/07/2020 
+ %    introduces two new "export" options: (1) for cleaned dT data and (2)
+ %    for estimated dTmax baseline (version displayed at time of
+ %    export--either edited or default). These options can be used for
+ %    addtional analysis, including Clearwater-correction if sensors are
+ %    partially in contact with heartwood. 
+           function export_dTclean(o, ~, ~)
+            % The user wants to export cleaned dT data. Useful for
+            % Clearwater correction
+            [filename, path] = uiputfile('*.csv', 'Select Export File');
+            if not(filename)
+                return
+            end
+            o.startWait('Exporting');
 
+            dT_e = zeros(o.allSfp{1}.ssL, o.projectConfig.numSensors);
+
+            for i = 1:o.projectConfig.numSensors
+                thisSfp = o.allSfp{i};
+                thisbla = o.allSfp{i}.bla';
+                
+                dT_e(:,i) = thisSfp.ss';
+            end
+            dTcOut=[ones(thisSfp.ssL,1) thisSfp.doy thisSfp.tod thisSfp.vpd thisSfp.par dT_e];
+            try
+                csvwrite(fullfile(path, filename), dTcOut);
+            catch err
+                errordlg(err.message, 'Export failed')
+            end
+
+            o.endWait();
+           end
+
+                function export_dTmax(o, ~, ~)
+            % The user wants to export estimated dTmax baseline. Used for
+            % Clearwater correction.
+            [filename, path] = uiputfile('*.csv', 'Select Export File');
+            if not(filename)
+                return
+            end
+            o.startWait('Exporting');
+
+            dTm_e = zeros(o.allSfp{1}.ssL, o.projectConfig.numSensors);
+
+            for i = 1:o.projectConfig.numSensors
+                thisSfp = o.allSfp{i};
+                thisSensor = o.allSfp{i}.ss';
+                thisDOY = o.allSfp{i}.doy';
+                thisTOD = o.allSfp{i}.tod';
+                thisdTmax = o.allSfp{i}.bla';
+
+                % If at least two bla points are positive ...
+                if sum(thisSensor(thisdTmax)>0)>=2
+                    thisdTmaxline = interp1(thisdTmax, thisSensor(thisdTmax), (1:length(thisSensor))');
+                else
+                    thisdTmaxline = nan * thisSensor;
+                end
+            
+                dTm_e(:,i) = thisdTmaxline;
+            end
+            dTmaxOut=[ones(thisSfp.ssL,1) thisSfp.doy thisSfp.tod thisSfp.vpd thisSfp.par dTm_e];
+            try
+                csvwrite(fullfile(path, filename), dTmaxOut);
+            catch err
+                errordlg(err.message, 'Export failed')
+            end
+
+            o.endWait();
+        end
+
+   % end new edit 07/07/2020
+ %%
         function readAndProcessSourceData(o, sensorStates)
             % Attempt to extract data from the CSV files.
             % If there is a problem then projectConfig.numSensors is set to
